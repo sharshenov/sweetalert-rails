@@ -1,6 +1,6 @@
-# Sweetalert::Rails
+# SweetAlert RubyOnRails integration gem
 
-TODO: Write a gem description
+Use [SweetAlert](http://tristanedwards.me/sweetalert) with Rails 3.1+
 
 ## Installation
 
@@ -16,9 +16,27 @@ Or install it yourself as:
 
     $ gem install sweetalert-rails
 
+Now you need to edit your app/assets/javascripts/application.js file and add the following line:
+``` javascript
+//= require sweet-alert
+```
+
+And then edit your `app/assets/stylesheets/application.css` file to look something like:
+``` css
+/*
+ *= require_self
+ *= require sweet-alert
+ *= require_tree .
+ */
+```
+
 ## Usage
 
-TODO: Write usage instructions here
+With the gem installed and included in your asset manifests, you can now use SweetAlert as you normally would.
+
+``` javascript
+sweetAlert("Awesome!");
+```
 
 ## Contributing
 
