@@ -1,7 +1,7 @@
 // SweetAlert
 // 2014 (c) - Tristan Edwards
 // github.com/t4t5/sweetalert
-(function(window, document) {
+;(function(window, document) {
 
   var modalClass   = '.sweet-alert',
       overlayClass = '.sweet-overlay',
@@ -93,15 +93,20 @@
       elem.style.left = '-9999px';
       elem.style.display = 'block';
 
-      var height = elem.clientHeight;
-      var padding = parseInt(getComputedStyle(elem).getPropertyValue('padding'), 10);
+      var height = elem.clientHeight,
+          padding;
+      if (typeof getComputedStyle !== "undefined") { /* IE 8 */
+        padding = parseInt(getComputedStyle(elem).getPropertyValue('padding'), 10);
+      } else{
+        padding = parseInt(elem.currentStyle.padding);
+      }
 
       elem.style.left = '';
       elem.style.display = 'none';
       return ('-' + parseInt(height / 2 + padding) + 'px');
     },
     fadeIn = function(elem, interval) {
-      if(+elem.style.opacity < 1) {
+      if (+elem.style.opacity < 1) {
         interval = interval || 16;
         elem.style.opacity = 0;
         elem.style.display = 'block';
@@ -116,6 +121,7 @@
         };
         tick();
       }
+      elem.style.display = 'block'; //fallback IE8
     },
     fadeOut = function(elem, interval) {
       interval = interval || 16;
@@ -183,16 +189,7 @@
 
     // For readability: check sweet-alert.html
     document.body.appendChild(sweetWrap);
-
-    // For development use only!
-    /*jQuery.ajax({
-      url: '../lib/sweet-alert.html', // Change path depending on file location
-      dataType: 'html'
-    })
-    .done(function(html) {
-      jQuery('body').append(html);
-    });*/
-  }
+  };
 
   /*
    * Global sweetAlert function
@@ -256,8 +253,8 @@
     var modal = getModal();
 
     // Mouse interactions
-    var onButtonEvent = function(e) {
-
+    var onButtonEvent = function(event) {
+      var e = event || window.event;
       var target = e.target || e.srcElement,
           targetedConfirm    = (target.className === 'confirm'),
           modalIsVisible     = hasClass(modal, 'visible'),
@@ -266,22 +263,22 @@
       switch (e.type) {
         case ("mouseover"):
           if (targetedConfirm) {
-            e.target.style.backgroundColor = colorLuminance(params.confirmButtonColor, -0.04);
+            target.style.backgroundColor = colorLuminance(params.confirmButtonColor, -0.04);
           }
           break;
         case ("mouseout"):
           if (targetedConfirm) {
-            e.target.style.backgroundColor = params.confirmButtonColor;
+            target.style.backgroundColor = params.confirmButtonColor;
           }
           break;
         case ("mousedown"):
           if (targetedConfirm) {
-            e.target.style.backgroundColor = colorLuminance(params.confirmButtonColor, -0.14);
+            target.style.backgroundColor = colorLuminance(params.confirmButtonColor, -0.14);
           }
           break;
         case ("mouseup"):
           if (targetedConfirm) {
-            e.target.style.backgroundColor = colorLuminance(params.confirmButtonColor, -0.04);
+            target.style.backgroundColor = colorLuminance(params.confirmButtonColor, -0.04);
           }
           break;
         case ("focus"):
@@ -335,11 +332,12 @@
 
     // Remember the current document.onclick event.
     previousDocumentClick = document.onclick;
-    document.onclick = function(e) {
+    document.onclick = function(event) {
+      var e = event || window.event;
       var target = e.target || e.srcElement;
 
       var clickedOnModal = (modal === target),
-          clickedOnModalChild = isDescendant(modal, e.target),
+          clickedOnModalChild = isDescendant(modal, target),
           modalIsVisible = hasClass(modal, 'visible'),
           outsideClickIsAllowed = modal.getAttribute('data-allow-ouside-click') === 'true';
 
@@ -355,7 +353,8 @@
         $modalButtons = modal.querySelectorAll('button:not([type=hidden])');
 
 
-    function handleKeyDown(e) {
+    function handleKeyDown(event) {
+      var e = event || window.event;
       var keyCode = e.keyCode || e.which;
 
       if ([9,13,32,27].indexOf(keyCode) === -1) {
@@ -417,7 +416,8 @@
     previousWindowKeyDown = window.onkeydown;
     window.onkeydown = handleKeyDown;
 
-    function handleOnBlur(e) {
+    function handleOnBlur(event) {
+      var e = event || window.event;
       var $targetElement = e.target || e.srcElement,
           $focusElement = e.relatedTarget,
           modalIsVisible = hasClass(modal, 'visible');
@@ -663,8 +663,9 @@
     }, 500);
 
     var timer = modal.getAttribute('data-timer');
-    if (timer !== "null") {
-      setTimeout(function() {
+
+    if (timer !== "null" && timer !== "") {
+      modal.timeout = setTimeout(function() {
         closeModal();
       }, timer);
     }
@@ -703,6 +704,7 @@
       previousActiveElement.focus();
     }
     lastFocusedButton = undefined;
+    clearTimeout(modal.timeout);
   }
 
 
@@ -724,18 +726,18 @@
 
   (function () {
 	  if (document.readyState === "complete" || document.readyState === "interactive" && document.body) {
-		  sweetAlertInitialize();
+		  window.sweetAlertInitialize();
 	  } else {
 		  if (document.addEventListener) {
 			  document.addEventListener('DOMContentLoaded', function factorial() {
 				  document.removeEventListener('DOMContentLoaded', arguments.callee, false);
-				  sweetAlertInitialize();
+				  window.sweetAlertInitialize();
 			  }, false);
 		  } else if (document.attachEvent) {
 			  document.attachEvent('onreadystatechange', function() {
 				  if (document.readyState === 'complete') {
 					  document.detachEvent('onreadystatechange', arguments.callee);
-					  sweetAlertInitialize();
+					  window.sweetAlertInitialize();
 				  }
 			  });
 		  }
