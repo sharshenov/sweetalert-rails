@@ -1,5 +1,7 @@
 # SweetAlert RubyOnRails integration gem
 
+[![Gem Version](https://badge.fury.io/rb/sweetalert-rails.svg)](http://badge.fury.io/rb/sweetalert-rails)
+
 Use [SweetAlert](http://tristanedwards.me/sweetalert) with Rails 3.1+
 
 ## Installation
