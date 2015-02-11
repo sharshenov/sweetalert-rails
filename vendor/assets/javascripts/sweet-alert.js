@@ -11,6 +11,7 @@
         text: '',
         type: null,
         allowOutsideClick: false,
+        showConfirmButton: true,
         showCancelButton: false,
         closeOnConfirm: true,
         closeOnCancel: true,
@@ -32,7 +33,14 @@
    */
 
   var getModal = function() {
-      return document.querySelector(modalClass);
+      var $modal = document.querySelector(modalClass);
+
+      if (!$modal) {
+        sweetAlertInitialize();
+        $modal = getModal();
+      }
+
+      return $modal;
     },
     getOverlay = function() {
       return document.querySelector(overlayClass);
@@ -146,7 +154,7 @@
     fireClick = function(node) {
       // Taken from http://www.nonobtrusive.com/2011/11/29/programatically-fire-crossbrowser-click-event-with-javascript/
       // Then fixed for today's Chrome browser.
-      if (MouseEvent) {
+      if (typeof MouseEvent === 'function') {
         // Up-to-date approach
         var mevt = new MouseEvent('click', {
           view: window,
@@ -186,14 +194,14 @@
    * Add modal + overlay to DOM
    */
 
-  window.sweetAlertInitialize = function() {
-    var sweetHTML = '<div class="sweet-overlay" tabIndex="-1"></div><div class="sweet-alert" tabIndex="-1"><div class="icon error"><span class="x-mark"><span class="line left"></span><span class="line right"></span></span></div><div class="icon warning"> <span class="body"></span> <span class="dot"></span> </div> <div class="icon info"></div> <div class="icon success"> <span class="line tip"></span> <span class="line long"></span> <div class="placeholder"></div> <div class="fix"></div> </div> <div class="icon custom"></div> <h2>Title</h2><p>Text</p><button class="cancel" tabIndex="2">Cancel</button><button class="confirm" tabIndex="1">OK</button></div>',
+  var sweetAlertInitialize = function() {
+    var sweetHTML = '<div class="sweet-overlay" tabIndex="-1"></div><div class="sweet-alert" tabIndex="-1"><div class="sa-icon sa-error"><span class="sa-x-mark"><span class="sa-line sa-left"></span><span class="sa-line sa-right"></span></span></div><div class="sa-icon sa-warning"> <span class="sa-body"></span> <span class="sa-dot"></span> </div> <div class="sa-icon sa-info"></div> <div class="sa-icon sa-success"> <span class="sa-line sa-tip"></span> <span class="sa-line sa-long"></span> <div class="sa-placeholder"></div> <div class="sa-fix"></div> </div> <div class="sa-icon sa-custom"></div> <h2>Title</h2><p>Text</p><button class="cancel" tabIndex="2">Cancel</button><button class="confirm" tabIndex="1">OK</button></div>',
         sweetWrap = document.createElement('div');
 
     sweetWrap.innerHTML = sweetHTML;
 
     // Append elements to body
-    while(sweetWrap.firstChild) {
+    while (sweetWrap.firstChild) {
       document.body.appendChild(sweetWrap.firstChild);
     }
   };
@@ -202,28 +210,11 @@
   /*
    * Global sweetAlert function
    */
-
-  window.sweetAlert = window.swal = function() {
-    // Copy arguments to the local args variable
-    var args = arguments;
-    if (getModal() !== null) {
-      // If getModal returns values then continue
-      modalDependant.apply(this, args);
-    } else {
-      // If getModal returns null i.e. no matches, then set up a interval event to check the return value until it is not null	
-      var modalCheckInterval = setInterval(function() {
-        if (getModal() !== null) {
-          clearInterval(modalCheckInterval);
-          modalDependant.apply(this, args);
-        }
-      }, 100);
-    }
-  };
-        
-  function modalDependant() {
-
+  var sweetAlert, swal;
+  
+  sweetAlert = swal = function() {
     var customizations = arguments[0];
-    
+
     /*
      * Use argument if defined or default value from params object otherwise.
      * Supports the case where a default value is boolean true and should be
@@ -233,16 +224,14 @@
       var args = customizations;
 
       if (typeof args[key] !== 'undefined') {
-        console.log(key + " is " + args[key]);
         return args[key];
       } else {
-        console.log(key + " is " + defaultParams[key]);
         return defaultParams[key];
       }
     }
 
     if (arguments[0] === undefined) {
-      window.console.error('SweetAlert expects at least 1 attribute!');
+      logStr('SweetAlert expects at least 1 attribute!');
       return false;
     }
 
@@ -261,21 +250,22 @@
       // Ex: swal({title:"Hello", text: "Just testing", type: "info"});
       case 'object':
         if (arguments[0].title === undefined) {
-          window.console.error('Missing "title" argument!');
+          logStr('Missing "title" argument!');
           return false;
         }
 
         params.title = arguments[0].title;
 
         var availableCustoms = [
-          'text', 
-          'type', 
-          'customClass', 
-          'allowOutsideClick', 
-          'showCancelButton', 
-          'closeOnConfirm', 
-          'closeOnCancel', 
-          'timer', 
+          'text',
+          'type',
+          'customClass',
+          'allowOutsideClick',
+          'showConfirmButton',
+          'showCancelButton',
+          'closeOnConfirm',
+          'closeOnCancel',
+          'timer',
           'confirmButtonColor',
           'cancelButtonText',
           'imageUrl',
@@ -284,9 +274,12 @@
           'animation',
           'allowEscapeKey'];
 
-        availableCustoms.forEach(function(customName) {
+        // It would be nice to just use .forEach here, but IE8... :(
+        var numCustoms = availableCustoms.length;
+        for (var customIndex = 0; customIndex < numCustoms; customIndex++) {
+          var customName = availableCustoms[customIndex];
           params[customName] = argumentOrDefault(customName);
-        });
+        }
 
         // Show "Confirm" instead of "OK" if cancel button is visible
         params.confirmButtonText  = (params.showCancelButton) ? 'Confirm' : defaultParams.confirmButtonText;
@@ -294,11 +287,11 @@
 
         // Function to call when clicking on cancel/OK
         params.doneFunction       = arguments[1] || null;
-        
+
         break;
 
       default:
-        window.console.error('Unexpected type of argument! Expected "string" or "object", got ' + typeof arguments[0]);
+        logStr('Unexpected type of argument! Expected "string" or "object", got ' + typeof arguments[0]);
         return false;
 
     }
@@ -356,7 +349,7 @@
             params.doneFunction(true);
 
             if (params.closeOnConfirm) {
-              window.sweetAlert.close();
+              sweetAlert.close();
             }
           } else if (doneFunctionExists && modalIsVisible) { // Clicked "cancel"
 
@@ -369,10 +362,10 @@
             }
 
             if (params.closeOnCancel) {
-              window.sweetAlert.close();
+              sweetAlert.close();
             }
           } else {
-            window.sweetAlert.close();
+            sweetAlert.close();
           }
 
           break;
@@ -401,7 +394,7 @@
           outsideClickIsAllowed = modal.getAttribute('data-allow-ouside-click') === 'true';
 
       if (!clickedOnModal && !clickedOnModalChild && modalIsVisible && outsideClickIsAllowed) {
-        window.sweetAlert.close();
+        sweetAlert.close();
       }
     };
 
@@ -409,7 +402,7 @@
     // Keyboard interactions
     var $okButton = modal.querySelector('button.confirm'),
         $cancelButton = modal.querySelector('button.cancel'),
-        $modalButtons = modal.querySelectorAll('button:not([type=hidden])');
+        $modalButtons = modal.querySelectorAll('button[tabindex]');
 
 
     function handleKeyDown(event) {
@@ -518,14 +511,14 @@
         }
       }, 0);
     };
-  }
+  };
 
 
   /*
    * Set default params for each popup
    * @param {Object} userParams
    */
-  window.sweetAlert.setDefaults = window.swal.setDefaults = function(userParams) {
+  sweetAlert.setDefaults = swal.setDefaults = function(userParams) {
     if (!userParams) {
       throw new Error('userParams is required');
     }
@@ -554,7 +547,7 @@
 
     // Text
     $text.innerHTML = (params.html) ? params.text : escapeHtml(params.text || '').split("\n").join("<br>");
-    
+
     if (params.text) {
       show($text);
     }
@@ -571,8 +564,8 @@
     }
 
     // Icon
-    hide(modal.querySelectorAll('.icon'));
-    if (params.type) {
+    hide(modal.querySelectorAll('.sa-icon'));
+    if (params.type && !isIE8()) {
       var validType = false;
       for (var i = 0; i < alertTypes.length; i++) {
         if (params.type === alertTypes[i]) {
@@ -581,35 +574,34 @@
         }
       }
       if (!validType) {
-        window.console.error('Unknown alert type: ' + params.type);
+        logStr('Unknown alert type: ' + params.type);
         return false;
       }
-      var $icon = modal.querySelector('.icon.' + params.type);
+      var $icon = modal.querySelector('.sa-icon.' + 'sa-' + params.type);
       show($icon);
 
       // Animate icon
       switch (params.type) {
         case "success":
           addClass($icon, 'animate');
-          addClass($icon.querySelector('.tip'), 'animateSuccessTip');
-          addClass($icon.querySelector('.long'), 'animateSuccessLong');
+          addClass($icon.querySelector('.sa-tip'), 'animateSuccessTip');
+          addClass($icon.querySelector('.sa-long'), 'animateSuccessLong');
           break;
         case "error":
           addClass($icon, 'animateErrorIcon');
-          addClass($icon.querySelector('.x-mark'), 'animateXMark');
+          addClass($icon.querySelector('.sa-x-mark'), 'animateXMark');
           break;
         case "warning":
           addClass($icon, 'pulseWarning');
-          addClass($icon.querySelector('.body'), 'pulseWarningIns');
-          addClass($icon.querySelector('.dot'), 'pulseWarningIns');
+          addClass($icon.querySelector('.sa-body'), 'pulseWarningIns');
+          addClass($icon.querySelector('.sa-dot'), 'pulseWarningIns');
           break;
       }
-
     }
 
     // Custom image
     if (params.imageUrl) {
-      var $customIcon = modal.querySelector('.icon.custom');
+      var $customIcon = modal.querySelector('.sa-icon.sa-custom');
 
       $customIcon.style.backgroundImage = 'url(' + params.imageUrl + ')';
       show($customIcon);
@@ -618,30 +610,34 @@
           _imgHeight = 80;
 
       if (params.imageSize) {
-        var imgWidth  = params.imageSize.split('x')[0];
-        var imgHeight = params.imageSize.split('x')[1];
+        var dimensions = params.imageSize.toString().split('x');
+        var imgWidth  = dimensions[0];
+        var imgHeight = dimensions[1];
 
         if (!imgWidth || !imgHeight) {
-          window.console.error("Parameter imageSize expects value with format WIDTHxHEIGHT, got " + params.imageSize);
+          logStr("Parameter imageSize expects value with format WIDTHxHEIGHT, got " + params.imageSize);
         } else {
           _imgWidth  = imgWidth;
           _imgHeight = imgHeight;
-
-          $customIcon.css({
-            'width': imgWidth + 'px',
-            'height': imgHeight + 'px'
-          });
         }
       }
       $customIcon.setAttribute('style', $customIcon.getAttribute('style') + 'width:' + _imgWidth + 'px; height:' + _imgHeight + 'px');
     }
 
-    // Cancel button
+    // Show cancel button?
     modal.setAttribute('data-has-cancel-button', params.showCancelButton);
     if (params.showCancelButton) {
       $cancelBtn.style.display = 'inline-block';
     } else {
       hide($cancelBtn);
+    }
+
+    // Show confirm button?
+    modal.setAttribute('data-has-confirm-button', params.showConfirmButton);
+    if (params.showConfirmButton) {
+      $confirmBtn.style.display = 'inline-block';
+    } else {
+      hide($confirmBtn);
     }
 
     // Edit text on cancel and confirm buttons
@@ -722,11 +718,7 @@
   }
 
 
-
-  /*
-   * Animations
-   */
-
+  // Animation when opening modal
   function openModal() {
     var modal = getModal();
     fadeIn(getOverlay(), 10);
@@ -746,17 +738,14 @@
 
     if (timer !== "null" && timer !== "") {
       modal.timeout = setTimeout(function() {
-        window.sweetAlert.close();
+        sweetAlert.close();
       }, timer);
     }
   }
 
 
-  /*
-   * Close sweetAlert modal programatically
-   */
-
-  window.sweetAlert.close = window.swal.close = function() {
+  // Aninmation when closing modal
+  sweetAlert.close = swal.close = function() {
     var modal = getModal();
     fadeOut(getOverlay(), 5);
     fadeOut(modal, 5);
@@ -767,19 +756,19 @@
 
     // Reset icon animations
 
-    var $successIcon = modal.querySelector('.icon.success');
+    var $successIcon = modal.querySelector('.sa-icon.sa-success');
     removeClass($successIcon, 'animate');
-    removeClass($successIcon.querySelector('.tip'), 'animateSuccessTip');
-    removeClass($successIcon.querySelector('.long'), 'animateSuccessLong');
+    removeClass($successIcon.querySelector('.sa-tip'), 'animateSuccessTip');
+    removeClass($successIcon.querySelector('.sa-long'), 'animateSuccessLong');
 
-    var $errorIcon = modal.querySelector('.icon.error');
+    var $errorIcon = modal.querySelector('.sa-icon.sa-error');
     removeClass($errorIcon, 'animateErrorIcon');
-    removeClass($errorIcon.querySelector('.x-mark'), 'animateXMark');
+    removeClass($errorIcon.querySelector('.sa-x-mark'), 'animateXMark');
 
-    var $warningIcon = modal.querySelector('.icon.warning');
+    var $warningIcon = modal.querySelector('.sa-icon.sa-warning');
     removeClass($warningIcon, 'pulseWarning');
-    removeClass($warningIcon.querySelector('.body'), 'pulseWarningIns');
-    removeClass($warningIcon.querySelector('.dot'), 'pulseWarningIns');
+    removeClass($warningIcon.querySelector('.sa-body'), 'pulseWarningIns');
+    removeClass($warningIcon.querySelector('.sa-dot'), 'pulseWarningIns');
 
 
     // Reset the page to its previous state
@@ -803,30 +792,28 @@
     modal.style.marginTop = getTopMargin(getModal());
   }
 
+  // If browser is Internet Explorer 8
+  function isIE8() {
+    if (window.attachEvent && !window.addEventListener) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
+  // Error messages for developers
+  function logStr(string) {
+    if (window.console) { // IE...
+      window.console.log("SweetAlert: " + string);
+    }
+  }
 
-  /*
-   * If library is injected after page has loaded
-   */
-
-  (function () {
-	  if (document.readyState === "complete" || document.readyState === "interactive" && document.body) {
-		  window.sweetAlertInitialize();
-	  } else {
-		  if (document.addEventListener) {
-			  document.addEventListener('DOMContentLoaded', function handler() {
-				  document.removeEventListener('DOMContentLoaded', handler, false);
-				  window.sweetAlertInitialize();
-			  }, false);
-		  } else if (document.attachEvent) {
-			  document.attachEvent('onreadystatechange', function handler() {
-				  if (document.readyState === 'complete') {
-					  document.detachEvent('onreadystatechange', handler);
-					  window.sweetAlertInitialize();
-				  }
-			  });
-		  }
-	  }
-  })();
+    if (typeof define === 'function' && define.amd) {
+      define(function() { return sweetAlert; });
+    } else if (typeof module !== 'undefined' && module.exports) {
+      module.exports = sweetAlert;
+    } else if (typeof window !== 'undefined') {
+      window.sweetAlert = window.swal = sweetAlert;
+    }
 
 })(window, document);
