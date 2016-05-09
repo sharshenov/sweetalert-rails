@@ -20,14 +20,24 @@ Or install it yourself as:
 
 Now you need to edit your app/assets/javascripts/application.js file and add the following line:
 ``` javascript
-//= require sweet-alert
+//= require sweetalert
 ```
 
 And then edit your `app/assets/stylesheets/application.css` file to look something like:
 ``` css
 /*
  *= require_self
- *= require sweet-alert
+ *= require sweetalert
+ *= require_tree .
+ */
+```
+
+Themes(facebook, twitter, google) are also available:
+``` css
+/*
+ *= require_self
+ *= require sweetalert
+ *= require sweetalert/themes/twitter
  *= require_tree .
  */
 ```
