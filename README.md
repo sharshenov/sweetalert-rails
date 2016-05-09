@@ -2,7 +2,7 @@
 
 [![Gem Version](https://badge.fury.io/rb/sweetalert-rails.svg)](http://badge.fury.io/rb/sweetalert-rails)
 
-Use [SweetAlert](http://tristanedwards.me/sweetalert) with Rails 3.1+
+Use [SweetAlert](http://t4t5.github.io/sweetalert/) with Rails 3.1+
 
 ## Installation
 
