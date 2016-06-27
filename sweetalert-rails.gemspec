@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = SweetAlert::VERSION
   spec.authors       = ["Rustam Sharshenov"]
   spec.email         = ["rustam@sharshenov.com"]
-  spec.summary       = "Use SweerAlert with Rails"
-  spec.description   = "This gem provides SweerAlert for your Rails application."
+  spec.summary       = "Use SweetAlert with Rails"
+  spec.description   = "This gem provides SweetAlert for your Rails application."
   spec.homepage      = "https://github.com/sharshenov/sweetalert-rails"
   spec.license       = "MIT"
 
