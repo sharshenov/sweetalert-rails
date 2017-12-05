@@ -1,3 +1,3 @@
 module SweetAlert
-  VERSION = "1.1.3"
+  VERSION = '2.0.6'.freeze
 end
